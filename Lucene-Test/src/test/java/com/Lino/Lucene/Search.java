@@ -27,7 +27,7 @@ public class Search {
 
 	///improved_tweets.json"
     static final String INDEX_PATH = "indexDir";
-    static final String JSON_FILE_PATH = "/test.json";
+    static final String JSON_FILE_PATH = "/home/onil/eclipse-workspace/Lucene-Test/src/test/resources/improved_tweets.json";
 
 
     public static void testIndex(){
@@ -35,15 +35,15 @@ public class Search {
         	LuceneIndexWriter lw = new LuceneIndexWriter(INDEX_PATH, JSON_FILE_PATH);
             lw.createIndex();
             //Check the index has been created successfully
-            Directory indexDirectory = FSDirectory.open(Paths.get(INDEX_PATH));
-            IndexReader indexReader = DirectoryReader.open(indexDirectory);
-            int numDocs = indexReader.numDocs();
-            //assertEquals(1,numDocs);
-            for ( int i = 0; i < numDocs; i++)
-            {
-                Document document = indexReader.document( i);
-                System.out.println( "d=" +document);
-            }
+//            Directory indexDirectory = FSDirectory.open(Paths.get(INDEX_PATH));
+//            IndexReader indexReader = DirectoryReader.open(indexDirectory);
+//            int numDocs = indexReader.numDocs();
+//            //assertEquals(1,numDocs);
+//            for ( int i = 0; i < numDocs; i++)
+//            {
+//                Document document = indexReader.document( i);
+//                System.out.println( "d=" +document);
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
