@@ -14,8 +14,11 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import com.sun.tools.javac.util.List;
+
 import java.io.*;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 
 
@@ -33,68 +36,118 @@ public class LuceneIndexWriter {
 
     public void createIndex() throws IOException{
     	
-        
         addDocuments();
-       
-    }
-    
+    } 
     public void addDocuments() throws IOException{
     	
+    	
+    	//***************************
+    	//Read File aLL at onces 
+    	// Requires Json array format 
+    	//****************************
+    	
+  
+//       //parse JSON File
+//    	//Get the JSON file, in this case is in ~/resources/test.json
+//        InputStream jsonFile =  getClass().getResourceAsStream(jsonFilePath);
+//        Reader readerJson = new InputStreamReader(jsonFile);
+//        
+//        //Parse the json file using simple-json library
+//        Object fileObjects= JSONValue.parse(readerJson);
+//        JSONArray arrayObjects=(JSONArray)fileObjects;
+//        
+//        
+//        //indexing tools 
+//        Analyzer analyzer = new StandardAnalyzer();
+//    	IndexWriterConfig config = new IndexWriterConfig(analyzer);
+//    	Directory dir = FSDirectory.open(Paths.get(indexPath));
+//    	IndexWriter indexWriter = new IndexWriter(dir, config);
+//    	
+//    	
+//    	for (Object o : arrayObjects)
+//    	{
+//    		Document doc = new Document();
+//    	    JSONObject tweet = (JSONObject) o;
+//    	    String text = (String) tweet.get("text");
+//    	    //System.out.println(text);
+//    	    
+//    	    //TODO: add other important content to the doc 
+//    	    
+//    	    doc.add(new TextField("content", text, Field.Store.YES));
+//    	    indexWriter.addDocument(doc);
+//    	   
+//    	}
+//    	indexWriter.commit();
+//    	indexWriter.close();
+//    	
+    	//**************************************************************************
+    	//Read File line by line 
+    	// Requires normal Json format i.e. every json tweet is separated by "\n"
+    	//**************************************************************************
+    	ArrayList<Object> list = new ArrayList<Object>();
     	File file = new File(jsonFilePath);
-    	LineIterator it = FileUtils.lineIterator(file, "UTF-8");
-    	try {
-    		
- 	        
+    	LineIterator it = FileUtils.lineIterator(file, "UTF-8");   	
+    	try {		 
     	    while (it.hasNext()) {
-    	    	
-    	    	Analyzer analyzer = new StandardAnalyzer();
-    	    	IndexWriterConfig config = new IndexWriterConfig(analyzer);
-    	    	Directory dir = FSDirectory.open(Paths.get(indexPath));
-    	    	IndexWriter indexWriter = new IndexWriter(dir, config);
-    	    	
-    	        String line = it.nextLine();
-    	        // do something with line
-    	      //parse JSON File
-    	    	//Get the JSON file, in this case is in ~/resources/test.json
-    	        //InputStream jsonFile =  getClass().getResourceAsStream(jsonFilePath);
-    	        //Reader readerJson = new InputStreamReader(jsonFile);
-
-    	        //Parse the json file using simple-json library
-    	        //Object fileObjects= JSONValue.parse(readerJson);
-    	        Object fileObjects= JSONValue.parse(line);
-    	        //JSONArray arrayObjects=(JSONArray)fileObjects;
+    	    	//add json to the list
+    	    	String line = it.nextLine();
+    	        Object fileObject= JSONValue.parse(line);
+    	        list.add(fileObject);	
     	        
-    	        if(fileObjects != null) {
-    	        	Document doc = new Document();
-    	    	    JSONObject tweet = (JSONObject) fileObjects;
-    	    	    String text = (String) tweet.get("text");
-    	    	    //System.out.println(text);
-    	    	    
-    	    	    //TODO: add other important content to the doc 
-    	    	    
-    	    	    doc.add(new TextField("content", text, Field.Store.YES));
-    	    	    indexWriter.addDocument(doc);
+    	        //when the list is to big index it 
+    	        if(list.size() > 100000 ) {
+    	        	//indexing tools 
+    	    	    Analyzer analyzer = new StandardAnalyzer();
+    		    	IndexWriterConfig config = new IndexWriterConfig(analyzer);
+    		    	Directory dir = FSDirectory.open(Paths.get(indexPath));
+    		    	IndexWriter indexWriter = new IndexWriter(dir, config);
+    		    	
+    		    	for (Object o : list)
+    	        	{
+    			        if(o != null) {
+    			        	Document doc = new Document();
+    			    	    JSONObject tweet = (JSONObject) o;
+    			    	    String text = (String) tweet.get("text");
+    			    	    //System.out.println(text);
+    			    	    
+    			    	    //TODO: add other important content to the doc 
+    			    	    
+    			    	    doc.add(new TextField("content", text, Field.Store.YES));
+    			    	    
+    			    	    indexWriter.addDocument(doc);
+    			        }
+    	        	   
+    	        	}
+    	        	indexWriter.commit();
+    	        	indexWriter.close();
+    	        	list = new ArrayList<Object>();	//clear the contents of the list re-use memory 
     	        }
-    	        	
-    	    	
-    	    	
-//    	    	for (Object o : arrayObjects)
-//    	    	{
-//    	    		Document doc = new Document();
-//    	    	    JSONObject tweet = (JSONObject) o;
-//    	    	    String text = (String) tweet.get("text");
-//    	    	    //System.out.println(text);
-//    	    	    
-//    	    	    //TODO: add other important content to the doc 
-//    	    	    
-//    	    	    doc.add(new TextField("content", text, Field.Store.YES));
-//    	    	    indexWriter.addDocument(doc);
-//    	    	   
-//    	    	}
-    	    	//indexWriter.optimize();
-    	    	indexWriter.commit();
-    	    	indexWriter.close();
     	    }
+    	    
+    	    //At the end index all the remaining json tweets
+    	    //indexing tools 
+    	    Analyzer analyzer = new StandardAnalyzer();
+	    	IndexWriterConfig config = new IndexWriterConfig(analyzer);
+	    	Directory dir = FSDirectory.open(Paths.get(indexPath));
+	    	IndexWriter indexWriter = new IndexWriter(dir, config);
+	    	for (Object o : list)
+        	{
+		        if(o != null) {
+		        	Document doc = new Document();
+		    	    JSONObject tweet = (JSONObject) o;
+		    	    String text = (String) tweet.get("text");
+		    	    //System.out.println(text);
+		    	    
+		    	    //TODO: add other important content to the doc 
+		    	    
+		    	    doc.add(new TextField("content", text, Field.Store.YES));
+		    	    indexWriter.addDocument(doc);
+		        }
+        	   
+        	}
+        	indexWriter.commit();
+        	indexWriter.close();
+    	    
     	} finally {
     	    LineIterator.closeQuietly(it);
     	}

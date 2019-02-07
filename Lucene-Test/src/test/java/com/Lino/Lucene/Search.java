@@ -27,9 +27,11 @@ public class Search {
 
 	///improved_tweets.json"
     static final String INDEX_PATH = "indexDir";
-    static final String JSON_FILE_PATH = "/home/onil/eclipse-workspace/Lucene-Test/src/test/resources/improved_tweets.json";
-
-
+    //Requires this format for going line by line 
+    static final String JSON_FILE_PATH = "/home/onil/eclipse-workspace/Lucene-Test/src/test/resources/my_tweets2.json";
+    //requires this format for reading file all at onces
+    //static final String JSON_FILE_PATH = "/data02_aaron.json";
+    
     public static void testIndex(){
         try {
         	LuceneIndexWriter lw = new LuceneIndexWriter(INDEX_PATH, JSON_FILE_PATH);
@@ -76,7 +78,7 @@ public class Search {
 	public static void main(String[] args) throws IOException, ParseException {
 
 		System.out.println("Test Index on file.json");
-		testIndex();	
+		//testIndex();	
 		testQuery("elon musk");		
 		
     }
