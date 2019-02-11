@@ -28,7 +28,7 @@ public class Search {
 	///improved_tweets.json"
     static final String INDEX_PATH = "indexDir";
     //Requires this format for going line by line 
-    static final String JSON_FILE_PATH = "/home/onil/eclipse-workspace/Lucene-Test/src/test/resources/my_tweets2.json";
+    static final String JSON_FILE_PATH = "/home/onil/eclipse-workspace/Lucene-Test/src/test/resources/improved_tweets.json";
     //requires this format for reading file all at onces
     //static final String JSON_FILE_PATH = "/data02_aaron.json";
     
@@ -58,7 +58,7 @@ public class Search {
     	Directory directory = FSDirectory.open(Paths.get(INDEX_PATH));
         DirectoryReader indexReader = DirectoryReader.open(directory);
         IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-        QueryParser parser = new QueryParser("content", analyzer);
+        QueryParser parser = new QueryParser("hash", analyzer);
 
         Query query = parser.parse(testquery);
        
@@ -78,8 +78,9 @@ public class Search {
 	public static void main(String[] args) throws IOException, ParseException {
 
 		System.out.println("Test Index on file.json");
-		testIndex();	
-		testQuery("elon musk");		
+		testIndex();
+		
+		testQuery("Sweetener");		
 		
     }
 

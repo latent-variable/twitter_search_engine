@@ -13,6 +13,8 @@ import org.apache.lucene.store.FSDirectory;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import com.sun.tools.javac.util.List;
 
@@ -31,11 +33,11 @@ public class LuceneIndexWriter {
         this.jsonFilePath = jsonFilePath;
     }
 
-    public void createIndex() throws IOException{
+    public void createIndex()  throws IOException, ParseException{
     	
         addDocuments();
     } 
-    public void addDocuments() throws IOException{
+    public void addDocuments() throws IOException, ParseException{
 
     	//**************************************************************************
     	//Read File line by line 
@@ -50,7 +52,7 @@ public class LuceneIndexWriter {
     	    	String line = it.nextLine();
     	        Object fileObject= JSONValue.parse(line);
     	        list.add(fileObject);	
-    	        
+    	         	        
     	        //when the list is to big index it 
     	        if(list.size() > 100000 ) {
     	        	//indexing tools 
@@ -62,16 +64,30 @@ public class LuceneIndexWriter {
     		    	for (Object o : list)
     	        	{
     			        if(o != null) {
+    			        	
     			        	Document doc = new Document();
     			    	    JSONObject tweet = (JSONObject) o;
     			    	    String text = (String) tweet.get("text");
+    			    	    //String Name = (String) ((JSONObject)tweet.get("user")).get("name");
+    			    	    //String screenName = (String) tweet.get("screen_name");
+    			    	    JSONArray HashTagArray =  (JSONArray) ((JSONObject)tweet.get("entities")).get("hashtags");
     			    	    //System.out.println(text);
+    			    	    String Hashtags = "";
+    			    	    if(HashTagArray != null) {
+    			    	    	for(Object a: HashTagArray) {
+    			    	    		JSONObject Hash = (JSONObject) a;
+    			    	    		String hash =  (String) Hash.get("text");
+    			    	    		Hashtags += hash + " ";
+    	    			    	    
+    			    	    	}
+    			    	    }
+    			    	    doc.add(new TextField("hash", Hashtags, Field.Store.YES));
     			    	    
     			    	    //TODO: add other important content to the doc 
     			    	    
     			    	    doc.add(new TextField("content", text, Field.Store.YES));
-    			    	    
     			    	    indexWriter.addDocument(doc);
+    			        	
     			        }
     	        	   
     	        	}
@@ -93,9 +109,20 @@ public class LuceneIndexWriter {
 		        	Document doc = new Document();
 		    	    JSONObject tweet = (JSONObject) o;
 		    	    String text = (String) tweet.get("text");
-		    	    //String userName = (String) tweet.get("username");
-		    	    //String screenName = (String) tweet.get("screenname");
+		    	    //String Name = (String) ((JSONObject)tweet.get("user")).get("name");
+		    	    //String screenName = (String) tweet.get("screen_name");
+		    	    JSONArray HashTagArray =  (JSONArray) ((JSONObject)tweet.get("entities")).get("hashtags");
 		    	    //System.out.println(text);
+		    	    String Hashtags = "";
+		    	    if(HashTagArray != null) {
+		    	    	for(Object a: HashTagArray) {
+		    	    		JSONObject Hash = (JSONObject) a;
+		    	    		String hash =  (String) Hash.get("text");
+		    	    		Hashtags += hash + " ";
+    			    	    
+		    	    	}
+		    	    }
+		    	    doc.add(new TextField("hash", Hashtags, Field.Store.YES));
 		    	    
 		    	    //TODO: add other important content to the doc 
 		    	    
