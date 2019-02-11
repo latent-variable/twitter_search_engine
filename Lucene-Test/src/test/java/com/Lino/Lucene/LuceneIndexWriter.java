@@ -22,9 +22,6 @@ import java.util.ArrayList;
 
 
 
-/**
- * Created by suay on 5/13/14.
- */
 public class LuceneIndexWriter {
 
     String indexPath = "";
@@ -39,47 +36,7 @@ public class LuceneIndexWriter {
         addDocuments();
     } 
     public void addDocuments() throws IOException{
-    	
-    	
-    	//***************************
-    	//Read File aLL at onces 
-    	// Requires Json array format 
-    	//****************************
-    	
-  
-//       //parse JSON File
-//    	//Get the JSON file, in this case is in ~/resources/test.json
-//        InputStream jsonFile =  getClass().getResourceAsStream(jsonFilePath);
-//        Reader readerJson = new InputStreamReader(jsonFile);
-//        
-//        //Parse the json file using simple-json library
-//        Object fileObjects= JSONValue.parse(readerJson);
-//        JSONArray arrayObjects=(JSONArray)fileObjects;
-//        
-//        
-//        //indexing tools 
-//        Analyzer analyzer = new StandardAnalyzer();
-//    	IndexWriterConfig config = new IndexWriterConfig(analyzer);
-//    	Directory dir = FSDirectory.open(Paths.get(indexPath));
-//    	IndexWriter indexWriter = new IndexWriter(dir, config);
-//    	
-//    	
-//    	for (Object o : arrayObjects)
-//    	{
-//    		Document doc = new Document();
-//    	    JSONObject tweet = (JSONObject) o;
-//    	    String text = (String) tweet.get("text");
-//    	    //System.out.println(text);
-//    	    
-//    	    //TODO: add other important content to the doc 
-//    	    
-//    	    doc.add(new TextField("content", text, Field.Store.YES));
-//    	    indexWriter.addDocument(doc);
-//    	   
-//    	}
-//    	indexWriter.commit();
-//    	indexWriter.close();
-//    	
+
     	//**************************************************************************
     	//Read File line by line 
     	// Requires normal Json format i.e. every json tweet is separated by "\n"
@@ -136,6 +93,8 @@ public class LuceneIndexWriter {
 		        	Document doc = new Document();
 		    	    JSONObject tweet = (JSONObject) o;
 		    	    String text = (String) tweet.get("text");
+		    	    //String userName = (String) tweet.get("username");
+		    	    //String screenName = (String) tweet.get("screenname");
 		    	    //System.out.println(text);
 		    	    
 		    	    //TODO: add other important content to the doc 
