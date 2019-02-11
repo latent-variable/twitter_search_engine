@@ -78,7 +78,7 @@ public class Search {
 	public static void main(String[] args) throws IOException, ParseException {
 
 		System.out.println("Test Index on file.json");
-		//testIndex();	
+		testIndex();	
 		testQuery("elon musk");		
 		
     }
