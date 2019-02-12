@@ -3,7 +3,9 @@ package com.Lino.Lucene;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -45,16 +47,20 @@ public class LuceneIndexWriter {
     	//**************************************************************************
     	ArrayList<Object> list = new ArrayList<Object>();
     	File file = new File(jsonFilePath);
-    	LineIterator it = FileUtils.lineIterator(file, "UTF-8");   	
+    	LineIterator it = FileUtils.lineIterator(file, "UTF-8"); 
+    	int total_count = 0;
+		long startTime = System.nanoTime();
+    	
     	try {		 
     	    while (it.hasNext()) {
     	    	//add json to the list
     	    	String line = it.nextLine();
-    	        Object fileObject= JSONValue.parse(line);
+    	        Object fileObject = JSONValue.parse(line);
     	        list.add(fileObject);	
-    	         	        
+    	        total_count ++;
+    	        
     	        //when the list is to big index it 
-    	        if(list.size() > 100000 ) {
+    	        if(list.size() > 10000 ) {
     	        	//indexing tools 
     	    	    Analyzer analyzer = new StandardAnalyzer();
     		    	IndexWriterConfig config = new IndexWriterConfig(analyzer);
@@ -64,37 +70,80 @@ public class LuceneIndexWriter {
     		    	for (Object o : list)
     	        	{
     			        if(o != null) {
-    			        	
     			        	Document doc = new Document();
     			    	    JSONObject tweet = (JSONObject) o;
     			    	    String text = (String) tweet.get("text");
-    			    	    //String Name = (String) ((JSONObject)tweet.get("user")).get("name");
-    			    	    //String screenName = (String) tweet.get("screen_name");
-    			    	    JSONArray HashTagArray =  (JSONArray) ((JSONObject)tweet.get("entities")).get("hashtags");
-    			    	    //System.out.println(text);
-    			    	    String Hashtags = "";
-    			    	    if(HashTagArray != null) {
-    			    	    	for(Object a: HashTagArray) {
-    			    	    		JSONObject Hash = (JSONObject) a;
-    			    	    		String hash =  (String) Hash.get("text");
-    			    	    		Hashtags += hash + " ";
-    	    			    	    
+    			    	    //System.out.println(text);  			
+    			    	    JSONArray hasharr = (JSONArray)((JSONObject)tweet.get("entities")).get("hashtags");
+    			    	    String hashtags = "";
+    			    	    if(hasharr != null) {
+    			    	    	for (Object a: hasharr) {
+    			    	    		String hashtag = (String)((JSONObject)a).get("text");
+    				    	    	//System.out.println(hashtag);
+    			    	    		hashtags += hashtag + " ";
     			    	    	}
     			    	    }
-    			    	    doc.add(new TextField("hash", Hashtags, Field.Store.YES));
-    			    	    
-    			    	    //TODO: add other important content to the doc 
+
+    			    	    String name = (String)((JSONObject)tweet.get("user")).get("name");
+    			    	    String screen_name = (String)((JSONObject)tweet.get("user")).get("screen_name");
+    			    	    String location = (String)((JSONObject)tweet.get("user")).get("location");
     			    	    
     			    	    doc.add(new TextField("content", text, Field.Store.YES));
+    			    	    doc.add(new TextField("hashtag", hashtags, Field.Store.YES));
+    			    	    doc.add(new TextField("name", name, Field.Store.YES));
+    			    	    doc.add(new TextField("screen_name", screen_name, Field.Store.YES));
+    			    	    doc.add(new TextField("location", location, Field.Store.YES));
+    			    	    
     			    	    indexWriter.addDocument(doc);
-    			        	
     			        }
-    	        	   
-    	        	}
+    			        
+    	        	}   	    
     	        	indexWriter.commit();
     	        	indexWriter.close();
-    	        	list = new ArrayList<Object>();	//clear the contents of the list re-use memory 
+    	    		System.out.println((System.nanoTime() - startTime) / 1000000000.0);
+    		    	
+    	        	
+    	        	//-------------------------Do the same except for white space analyzer 
+    	    	    analyzer = new WhitespaceAnalyzer();
+    		    	config = new IndexWriterConfig(analyzer);
+    		    	IndexWriter indexWriter2 = new IndexWriter(dir, config);
+    		    	
+    		    	for (Object o : list)
+    	        	{
+    			        if(o != null) {
+    			        	Document doc = new Document();
+    			    	    JSONObject tweet = (JSONObject) o;
+    			    	    String text = (String) tweet.get("text");
+    			    	    //System.out.println(text);  			
+    			    	    JSONArray hasharr = (JSONArray)((JSONObject)tweet.get("entities")).get("hashtags");
+    			    	    String hashtags = "";
+    			    	    if(hasharr != null) {
+    			    	    	for (Object a: hasharr) {
+    			    	    		String hashtag = (String)((JSONObject)a).get("text");
+    				    	    	//System.out.println(hashtag);
+    			    	    		hashtags += hashtag + " ";
+    			    	    	}
+    			    	    }
+
+    			    	    String name = (String)((JSONObject)tweet.get("user")).get("name");
+    			    	    String screen_name = (String)((JSONObject)tweet.get("user")).get("screen_name");
+    			    	    String location = (String)((JSONObject)tweet.get("user")).get("location");
+    			    	    
+    			    	    doc.add(new TextField("content", text, Field.Store.YES));
+    			    	    doc.add(new TextField("hashtag", hashtags, Field.Store.YES));
+    			    	    doc.add(new TextField("name", name, Field.Store.YES));
+    			    	    doc.add(new TextField("screen_name", screen_name, Field.Store.YES));
+    			    	    doc.add(new TextField("location", location, Field.Store.YES)); 
+    			    	    
+    			    	    indexWriter2.addDocument(doc);
+    			        }
+    			        
+    	        	}
+    	        	indexWriter2.commit();
+    	        	indexWriter2.close();
+    	        	list = new ArrayList<Object>();	//clear the contents of the list re-use memory
     	        }
+
     	    }
     	    
     	    //At the end index all the remaining json tweets
@@ -103,40 +152,85 @@ public class LuceneIndexWriter {
 	    	IndexWriterConfig config = new IndexWriterConfig(analyzer);
 	    	Directory dir = FSDirectory.open(Paths.get(indexPath));
 	    	IndexWriter indexWriter = new IndexWriter(dir, config);
+	    	
 	    	for (Object o : list)
         	{
 		        if(o != null) {
 		        	Document doc = new Document();
 		    	    JSONObject tweet = (JSONObject) o;
 		    	    String text = (String) tweet.get("text");
-		    	    //String Name = (String) ((JSONObject)tweet.get("user")).get("name");
-		    	    //String screenName = (String) tweet.get("screen_name");
-		    	    JSONArray HashTagArray =  (JSONArray) ((JSONObject)tweet.get("entities")).get("hashtags");
-		    	    //System.out.println(text);
-		    	    String Hashtags = "";
-		    	    if(HashTagArray != null) {
-		    	    	for(Object a: HashTagArray) {
-		    	    		JSONObject Hash = (JSONObject) a;
-		    	    		String hash =  (String) Hash.get("text");
-		    	    		Hashtags += hash + " ";
-    			    	    
+		    	    //System.out.println(text);  			
+		    	    JSONArray hasharr = (JSONArray)((JSONObject)tweet.get("entities")).get("hashtags");
+		    	    String hashtags = "";
+		    	    if(hasharr != null) {
+		    	    	for (Object a: hasharr) {
+		    	    		String hashtag = (String)((JSONObject)a).get("text");
+			    	    	//System.out.println(hashtag);
+		    	    		hashtags += hashtag + " ";
 		    	    	}
 		    	    }
-		    	    doc.add(new TextField("hash", Hashtags, Field.Store.YES));
-		    	    
-		    	    //TODO: add other important content to the doc 
+
+		    	    String name = (String)((JSONObject)tweet.get("user")).get("name");
+		    	    String screen_name = (String)((JSONObject)tweet.get("user")).get("screen_name");
+		    	    String location = (String)((JSONObject)tweet.get("user")).get("location");
 		    	    
 		    	    doc.add(new TextField("content", text, Field.Store.YES));
-		    	    indexWriter.addDocument(doc);
+		    	    doc.add(new TextField("hashtag", hashtags, Field.Store.YES));
+		    	    doc.add(new TextField("name", name, Field.Store.YES));
+		    	    doc.add(new TextField("screen_name", screen_name, Field.Store.YES));
+		    	    doc.add(new TextField("location", location, Field.Store.YES));
 		        }
-        	   
-        	}
+		        
+        	}   
         	indexWriter.commit();
-        	indexWriter.close();
-    	    
-    	} finally {
+        	indexWriter.close();	        	
+        	
+        	//-------------------------Do the same except for white space analyzer 
+    	    analyzer = new WhitespaceAnalyzer();
+	    	config = new IndexWriterConfig(analyzer);
+	    	IndexWriter indexWriter2 = new IndexWriter(dir, config);
+	    	
+	    	for (Object o : list)
+        	{
+		        if(o != null) {
+		        	Document doc = new Document();
+		    	    JSONObject tweet = (JSONObject) o;
+		    	    String text = (String) tweet.get("text");
+		    	    //System.out.println(text);  			
+		    	    JSONArray hasharr = (JSONArray)((JSONObject)tweet.get("entities")).get("hashtags");
+		    	    String hashtags = "";
+		    	    if(hasharr != null) {
+		    	    	for (Object a: hasharr) {
+		    	    		String hashtag = (String)((JSONObject)a).get("text");
+			    	    	//System.out.println(hashtag);
+		    	    		hashtags += hashtag + " ";
+		    	    	}
+		    	    }
+
+		    	    String name = (String)((JSONObject)tweet.get("user")).get("name");
+		    	    String screen_name = (String)((JSONObject)tweet.get("user")).get("screen_name");
+		    	    String location = (String)((JSONObject)tweet.get("user")).get("location");
+		    	    
+		    	    doc.add(new TextField("content", text, Field.Store.YES));
+		    	    doc.add(new TextField("hashtag", hashtags, Field.Store.YES));
+		    	    doc.add(new TextField("name", name, Field.Store.YES));
+		    	    doc.add(new TextField("screen_name", screen_name, Field.Store.YES));
+		    	    doc.add(new TextField("location", location, Field.Store.YES)); 
+		    	    
+		    	    indexWriter2.addDocument(doc);
+		        }
+		        
+        	}
+        	indexWriter2.commit();
+        	indexWriter2.close();
+        	list = new ArrayList<Object>();	//clear the contents of the list re-use memory
+
+    	} 
+    	finally {
+    		System.out.println("Total count: " + total_count);
     	    LineIterator.closeQuietly(it);
     	}
+    	
     	
     }
 }

@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -51,14 +52,29 @@ public class Search {
         }
     }
     
-    public static void testQuery(String testquery) throws IOException, ParseException {
-    	// Now search the index:
-    	Analyzer analyzer = new StandardAnalyzer();
-    	
+    public static void testQuery(String testquery, String querytype) throws IOException, ParseException {
+    	Analyzer analyzer = new StandardAnalyzer();    	
     	Directory directory = FSDirectory.open(Paths.get(INDEX_PATH));
         DirectoryReader indexReader = DirectoryReader.open(directory);
         IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-        QueryParser parser = new QueryParser("hash", analyzer);
+        QueryParser parser = new QueryParser("content", analyzer);
+        
+        if(querytype == "hashtag") {
+        	analyzer = new WhitespaceAnalyzer();
+        	parser = new QueryParser("hashtag", analyzer);
+        }
+        else if(querytype == "location") {
+        	analyzer = new WhitespaceAnalyzer();
+        	parser = new QueryParser("location", analyzer);
+        }
+        else if(querytype == "name") {
+        	analyzer = new WhitespaceAnalyzer();
+        	parser = new QueryParser("name", analyzer);
+        }
+        else if(querytype == "screen_name") {
+        	analyzer = new WhitespaceAnalyzer();
+        	parser = new QueryParser("screen_name", analyzer);
+        }
 
         Query query = parser.parse(testquery);
        
@@ -69,19 +85,27 @@ public class Search {
         // Iterate through the results:
         for (int rank = 0; rank < hits.length; ++rank) {
             Document hitDoc = indexSearcher.doc(hits[rank].doc);
-            System.out.println((rank + 1) + " (score:" + hits[rank].score + ") --> " + hitDoc.get("content"));
+            System.out.println((rank + 1) + " (score:" + hits[rank].score + ") --> " 
+            		+ hitDoc.get("screen_name") + " ("
+            		+ hitDoc.get("name") + "): "
+            		+ hitDoc.get("content") + " "
+            		+ hitDoc.get("hashtags") + " ("
+            		+ hitDoc.get("location") + ")");
+            
 //             System.out.println(indexSearcher.explain(query, hits[rank].doc));
         }
         indexReader.close();
         directory.close();
     }
 	public static void main(String[] args) throws IOException, ParseException {
-
+		long startTime = System.nanoTime();
 		System.out.println("Test Index on file.json");
-		testIndex();
-		
-		testQuery("Sweetener");		
-		
+		testIndex();	
+		System.out.println("Index time (seconds): " + (System.nanoTime() - startTime) / 1000000000.0);
+		testQuery("elon musk", "text");
+		testQuery("NBA", "hashtag");
+		testQuery("Mexico", "location");
+		System.out.println("Total run time (seconds): " + (System.nanoTime() - startTime) / 1000000000.0);
     }
 
 }
